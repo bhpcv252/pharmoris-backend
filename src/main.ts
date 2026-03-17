@@ -2,11 +2,18 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+  });
+
+  app.useLogger(app.get(Logger));
+
   const configService = app.get(ConfigService);
 
+  // Swagger setup
   const swaggerConfig = new DocumentBuilder()
     .setTitle('PHARMORIS API')
     .setDescription('Pharmaceutical Intelligence Platform')
@@ -18,10 +25,14 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   const port = configService.get<number>('PORT', 3000);
+
   await app.listen(port);
-  console.log(`Application is running on port ${port}`);
+
+  const logger = app.get(Logger);
+  logger.log(`Application is running on port ${port}`);
 }
 
 bootstrap().catch((err: unknown) => {
+  // fallback logger
   console.error('App failed to start', err);
 });

@@ -1,6 +1,5 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -55,7 +54,7 @@ model User {
 
 model Pharmacy {
   id        String   @id @default(uuid())
-  name      String
+  name      String   @unique
   region    String
   status    PharmacyStatus
   createdAt DateTime @default(now())
@@ -76,7 +75,7 @@ model Manufacturer {
 
 model Supplier {
   id        String   @id @default(uuid())
-  name      String
+  name      String   @unique
   region    String
   status    SupplierStatus
   createdAt DateTime @default(now())
