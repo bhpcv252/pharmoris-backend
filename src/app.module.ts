@@ -3,10 +3,18 @@ import { ConfigModule } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 
-import { EnvConfig } from './env.validation';
+import { EnvConfig } from './config/env.validation';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { HealthController } from './health/health.controller';
+import { HealthController } from './modules/health/health.controller';
+import { HealthModule } from './modules/health/health.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { MedicineModule } from './modules/medicine/medicine.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
+import { PricingModule } from './modules/pricing/pricing.module';
+import { AlertModule } from './modules/alert/alert.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { ReportModule } from './modules/report/report.module';
 
 @Module({
   imports: [
@@ -29,6 +37,14 @@ import { HealthController } from './health/health.controller';
         return validatedConfig;
       },
     }),
+    HealthModule,
+    AuthModule,
+    MedicineModule,
+    InventoryModule,
+    PricingModule,
+    AlertModule,
+    DashboardModule,
+    ReportModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],

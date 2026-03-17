@@ -7,7 +7,148 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  ADMIN
+  ANALYST
+}
+
+enum PharmacyStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum SupplierStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AlertType {
+  LOW_STOCK
+  PRICE_SPIKE
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum AlertStatus {
+  OPEN
+  RESOLVED
+}
+
 model HealthCheck {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+
+  @@index([role])
+}
+
+model Pharmacy {
+  id        String   @id @default(uuid())
+  name      String
+  region    String
+  status    PharmacyStatus
+  createdAt DateTime @default(now())
+
+  inventorySnapshots InventorySnapshot[]
+
+  @@index([status])
+  @@index([region])
+}
+
+model Manufacturer {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  medicines Medicine[]
+}
+
+model Supplier {
+  id        String   @id @default(uuid())
+  name      String
+  region    String
+  status    SupplierStatus
+  createdAt DateTime @default(now())
+
+  priceObservations PriceObservation[]
+
+  @@index([status])
+}
+
+model Medicine {
+  id               String   @id @default(uuid())
+  sku              String   @unique
+  name             String
+  manufacturerId   String
+  reorderThreshold Int
+  targetPrice      Float
+  createdAt        DateTime @default(now())
+
+  manufacturer Manufacturer @relation(fields: [manufacturerId], references: [id])
+
+  inventorySnapshots InventorySnapshot[]
+  priceObservations  PriceObservation[]
+  alerts             Alert[]
+
+  @@index([manufacturerId])
+  @@index([name])
+}
+
+model InventorySnapshot {
+  id              String   @id @default(uuid())
+  pharmacyId      String
+  medicineId      String
+  quantityOnHand  Int
+  recordedAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  pharmacy Pharmacy @relation(fields: [pharmacyId], references: [id])
+  medicine Medicine @relation(fields: [medicineId], references: [id])
+
+  @@index([medicineId])
+  @@index([pharmacyId])
+  @@index([recordedAt])
+}
+
+model PriceObservation {
+  id          String   @id @default(uuid())
+  medicineId  String
+  supplierId  String
+  unitPrice   Float
+  observedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  medicine Medicine @relation(fields: [medicineId], references: [id])
+  supplier Supplier @relation(fields: [supplierId], references: [id])
+
+  @@index([medicineId])
+  @@index([observedAt])
+}
+
+model Alert {
+  id          String   @id @default(uuid())
+  medicineId  String
+  pharmacyId  String?
+  alertType   AlertType
+  severity    AlertSeverity
+  message     String
+  status      AlertStatus
+  createdAt   DateTime @default(now())
+
+  medicine Medicine @relation(fields: [medicineId], references: [id])
+
+  @@index([status])
+  @@index([severity])
+  @@index([alertType])
 }
