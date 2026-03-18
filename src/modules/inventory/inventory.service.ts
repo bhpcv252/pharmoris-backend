@@ -61,8 +61,8 @@ export class InventoryService {
 	private getSeverity(quantity: number, threshold: number) {
 		const ratio = quantity / threshold;
 
-		if (ratio < 0.25) return "HIGH";
-		if (ratio < 0.5) return "MEDIUM";
+		if (ratio <= 0.25) return "HIGH";
+		if (ratio <= 0.5) return "MEDIUM";
 		return "LOW";
 	}
 }
