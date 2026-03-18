@@ -8,10 +8,10 @@ describe("AppController", () => {
 	});
 
 	describe("root", () => {
-		it("should redirect to /api/health", () => {
-			const res = { redirect: jest.fn() } as any;
+		it("should redirect to /health", () => {
+			const res = { redirect: jest.fn() } as unknown;
 			appController.redirectToHealth(res);
-			expect(res.redirect).toHaveBeenCalledWith(301, "/api/health");
+			expect(res.redirect).toHaveBeenCalledWith(301, "/health");
 		});
 	});
 });
