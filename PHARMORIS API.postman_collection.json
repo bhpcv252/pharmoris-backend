@@ -1,0 +1,1199 @@
+{
+	"info": {
+		"_postman_id": "9971235e-fe0e-4cb6-827d-fe148d1a89d6",
+		"name": "PHARMORIS API",
+		"description": "PHARMORIS API collection. Base URL: [http://localhost:3000](http://localhost:3000)\n\nQuick Start:\n\n1. Run 'Login as Admin', the token auto-saves to {{adminToken}}\n    \n2. Run 'Login as Analyst', saves to {{analystToken}}\n    \n3. All protected requests use the saved tokens automatically.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "18840905"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login as Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.access_token) {",
+									"  pm.collectionVariables.set('adminToken', res.access_token);",
+									"  console.log('Admin token saved.');",
+									"} else {",
+									"  console.error('No access_token in response:', JSON.stringify(res));",
+									"}",
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Has access_token', () => pm.expect(res).to.have.property('access_token'));",
+									"pm.test('User role is ADMIN', () => pm.expect(res.user.role).to.eql('ADMIN'));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@pharmoris.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login as Analyst",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"if (res.access_token) {",
+									"  pm.collectionVariables.set('analystToken', res.access_token);",
+									"  console.log('Analyst token saved.');",
+									"}",
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Has access_token', () => pm.expect(res).to.have.property('access_token'));",
+									"pm.test('User role is ANALYST', () => pm.expect(res.user.role).to.eql('ANALYST'));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"analyst@pharmoris.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Wrong Password (expect 401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 401', () => pm.response.to.have.status(401));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@pharmoris.com\",\n  \"password\": \"wrongpassword\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Unknown User (expect 401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 401', () => pm.response.to.have.status(401));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"ghost@pharmoris.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Medicines",
+			"item": [
+				{
+					"name": "List Medicines (default)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Has data array', () => pm.expect(res.data).to.be.an('array'));",
+									"pm.test('Has meta object', () => pm.expect(res.meta).to.have.all.keys('page', 'limit', 'total'));",
+									"if (res.data.length > 0) {",
+									"  pm.collectionVariables.set('medicineId', res.data[0].id);",
+									"  console.log('medicineId set to:', res.data[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{analystToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/medicines?page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"medicines"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Medicines - Filter by Manufacturer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Has data array', () => pm.expect(pm.response.json().data).to.be.an('array'));"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{analystToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/medicines?page=1&limit=20&manufacturerId=REPLACE_WITH_MANUFACTURER_ID",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"medicines"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "manufacturerId",
+									"value": "REPLACE_WITH_MANUFACTURER_ID",
+									"description": "Replace with a real manufacturer UUID after seeding"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Medicines - Sort by Name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{analystToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/medicines?page=1&limit=20&sort=name",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"medicines"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "sort",
+									"value": "name"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Medicine (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"pm.test('Status 200 or 201', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+									"pm.test('Has id', () => pm.expect(res).to.have.property('id'));",
+									"if (res.id) {",
+									"  pm.collectionVariables.set('medicineId', res.id);",
+									"  console.log('New medicineId saved:', res.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sku\": \"MED-TEST-001\",\n  \"name\": \"Ibuprofen 400mg\",\n  \"manufacturer_id\": \"REPLACE_WITH_MANUFACTURER_ID\",\n  \"reorder_threshold\": 25,\n  \"target_price\": 2.00\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/medicines",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"medicines"
+							]
+						},
+						"description": "Replace manufacturer_id with a real UUID. Get one from GET /medicines response."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Medicine - Analyst Forbidden (expect 403)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 403 (analyst cannot create)', () => pm.response.to.have.status(403));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{analystToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sku\": \"MED-HACK-999\",\n  \"name\": \"Fake Drug\",\n  \"manufacturer_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"reorder_threshold\": 10,\n  \"target_price\": 1.00\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/medicines",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"medicines"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Medicine - No Auth (expect 401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 401 (no token)', () => pm.response.to.have.status(401));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sku\": \"MED-NOOP-000\",\n  \"name\": \"No Auth Drug\",\n  \"manufacturer_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"reorder_threshold\": 10,\n  \"target_price\": 1.00\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/medicines",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"medicines"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Inventory Snapshots",
+			"item": [
+				{
+					"name": "Ingest Snapshot - Normal Stock",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200 or 201', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+									"console.log('Snapshot created. Check /alerts for any LOW_STOCK alerts generated.');"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"pharmacy_id\": \"3b1ff972-da17-4278-bff3-f1b0c86541a3\",\n  \"medicine_id\": \"{{medicineId}}\",\n  \"quantity_on_hand\": 100\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/inventory-snapshots",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"inventory-snapshots"
+							]
+						},
+						"description": "quantity_on_hand=100 — above reorder threshold (50 for Paracetamol). Should NOT trigger LOW_STOCK alert."
+					},
+					"response": []
+				},
+				{
+					"name": "Ingest Snapshot - LOW STOCK trigger",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200 or 201', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+									"console.log('quantity_on_hand=40, reorder_threshold=50 => should trigger LOW_STOCK alert. Verify via GET /alerts.');"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"pharmacy_id\": \"3b1ff972-da17-4278-bff3-f1b0c86541a3\",\n  \"medicine_id\": \"{{medicineId}}\",\n  \"quantity_on_hand\": 10\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/inventory-snapshots",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"inventory-snapshots"
+							]
+						},
+						"description": "quantity_on_hand=40 < reorder_threshold=50 for Paracetamol. Should create a LOW_STOCK alert."
+					},
+					"response": []
+				},
+				{
+					"name": "Ingest Snapshot - Missing Fields (expect 400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 400 (validation error)', () => pm.response.to.have.status(400));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"pharmacy_id\": \"REPLACE_WITH_PHARMACY_ID\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/inventory-snapshots",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"inventory-snapshots"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Price Observations",
+			"item": [
+				{
+					"name": "Record Price - No Spike",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200 or 201', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+									"console.log('Price 1.40 (same as seed). No PRICE_SPIKE expected.');"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"medicine_id\": \"{{medicineId}}\",\n  \"supplier_id\": \"b4746e47-658d-445b-a0ed-192eae19df95\",\n  \"unit_price\": 1.40\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/price-observations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"price-observations"
+							]
+						},
+						"description": "Seed last price for Paracetamol was 1.70. 1.40 is a decrease — no PRICE_SPIKE alert expected."
+					},
+					"response": []
+				},
+				{
+					"name": "Record Price - PRICE SPIKE trigger (>10%)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200 or 201', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+									"console.log('Price 1.90 vs previous 1.70 = ~11.7% increase. Should trigger PRICE_SPIKE alert. Verify via GET /alerts.');"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"medicine_id\": \"{{medicineId}}\",\n  \"supplier_id\": \"b4746e47-658d-445b-a0ed-192eae19df95\",\n  \"unit_price\": 1.90\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/price-observations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"price-observations"
+							]
+						},
+						"description": "1.90 vs prev 1.70 = 11.76% spike. Exceeds 10% threshold — should create PRICE_SPIKE alert."
+					},
+					"response": []
+				},
+				{
+					"name": "Record Price - Missing Fields (expect 400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 400 (validation)', () => pm.response.to.have.status(400));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"medicine_id\": \"{{medicineId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/price-observations",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"price-observations"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Alerts",
+			"item": [
+				{
+					"name": "Get All Alerts",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Response is array', () => pm.expect(res).to.be.an('array'));",
+									"console.log('Total alerts:', res.length);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{analystToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/alerts",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alerts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Alerts - OPEN only",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('All alerts are OPEN', () => {",
+									"  res.forEach(a => pm.expect(a.status).to.eql('OPEN'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{analystToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/alerts?status=OPEN",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alerts"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "OPEN"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Alerts - HIGH severity",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('All alerts are HIGH severity', () => {",
+									"  res.forEach(a => pm.expect(a.severity).to.eql('HIGH'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{analystToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/alerts?severity=HIGH",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alerts"
+							],
+							"query": [
+								{
+									"key": "severity",
+									"value": "HIGH"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Alerts - OPEN + HIGH",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('All match OPEN + HIGH', () => {",
+									"  res.forEach(a => {",
+									"    pm.expect(a.status).to.eql('OPEN');",
+									"    pm.expect(a.severity).to.eql('HIGH');",
+									"  });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{analystToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/alerts?status=OPEN&severity=HIGH",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"alerts"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "OPEN"
+								},
+								{
+									"key": "severity",
+									"value": "HIGH"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Dashboard",
+			"item": [
+				{
+					"name": "Get Dashboard Summary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Has total_medicines', () => pm.expect(res).to.have.property('total_medicines'));",
+									"pm.test('Has active_pharmacies', () => pm.expect(res).to.have.property('active_pharmacies'));",
+									"pm.test('Has open_alerts', () => pm.expect(res).to.have.property('open_alerts'));",
+									"pm.test('Has savings_opportunity', () => pm.expect(res).to.have.property('savings_opportunity'));",
+									"pm.test('Counts are non-negative numbers', () => {",
+									"  pm.expect(res.total_medicines).to.be.a('number').and.to.be.at.least(0);",
+									"  pm.expect(res.active_pharmacies).to.be.a('number').and.to.be.at.least(0);",
+									"  pm.expect(res.open_alerts).to.be.a('number').and.to.be.at.least(0);",
+									"});",
+									"console.log('Dashboard:', JSON.stringify(res, null, 2));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{analystToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/summary",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"dashboard",
+								"summary"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dashboard - No Auth (expect 401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 401', () => pm.response.to.have.status(401));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/summary",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"dashboard",
+								"summary"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Reports",
+			"item": [
+				{
+					"name": "Get Cost-Savings Report",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const res = pm.response.json();",
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"pm.test('Response is array', () => pm.expect(res).to.be.an('array'));",
+									"if (res.length > 0) {",
+									"  const first = res[0];",
+									"  pm.test('Each item has medicine_id', () => pm.expect(first).to.have.property('medicine_id'));",
+									"  pm.test('Each item has medicine_name', () => pm.expect(first).to.have.property('medicine_name'));",
+									"  pm.test('Each item has current_price', () => pm.expect(first).to.have.property('current_price'));",
+									"  pm.test('Each item has target_price', () => pm.expect(first).to.have.property('target_price'));",
+									"  pm.test('Each item has potential_savings', () => pm.expect(first).to.have.property('potential_savings'));",
+									"}",
+									"console.log('Cost-savings rows:', res.length);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{analystToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/reports/cost-savings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reports",
+								"cost-savings"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Cost-Savings - Admin also works",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/reports/cost-savings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reports",
+								"cost-savings"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status 200', () => pm.response.to.have.status(200));",
+									"console.log('Health response:', pm.response.text());"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000"
+		},
+		{
+			"key": "adminToken",
+			"value": ""
+		},
+		{
+			"key": "analystToken",
+			"value": ""
+		},
+		{
+			"key": "medicineId",
+			"value": ""
+		},
+		{
+			"key": "pharmacyId",
+			"value": ""
+		},
+		{
+			"key": "supplierId",
+			"value": ""
+		}
+	]
+}

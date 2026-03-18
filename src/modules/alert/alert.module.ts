@@ -1,9 +1,12 @@
-import { Module } from '@nestjs/common';
-import { AlertController } from './alert.controller';
-import { AlertService } from './alert.service';
+import { Module } from "@nestjs/common";
+import { AlertService } from "./alert.service";
+import { AlertController } from "./alert.controller";
+import { DashboardModule } from "../dashboard/dashboard.module";
 
 @Module({
-  controllers: [AlertController],
-  providers: [AlertService],
+	imports: [DashboardModule],
+	controllers: [AlertController],
+	providers: [AlertService],
+	exports: [AlertService],
 })
 export class AlertModule {}

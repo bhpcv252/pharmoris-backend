@@ -5,6 +5,6 @@ import type { Response } from 'express';
 export class AppController {
   @Get()
   redirectToHealth(@Res() res: Response) {
-    res.redirect(301, '/api/health');
+    res.redirect(301, '/health');
   }
 }
