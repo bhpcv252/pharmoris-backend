@@ -1,98 +1,201 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# PHARMORIS Backend Service
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+This README provides instructions to get started locally, understand the architecture, and run the service with Docker.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## Table of Contents
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- [Architecture](#architecture)
+- [Prerequisites](#prerequisites)
+- [Setup & Installation](#setup--installation)
+- [Running the Service](#running-the-service)
+- [Database Migrations & Seeding](#database-migrations--seeding)
+- [API Endpoints](#api-endpoints)
+- [Caching](#caching)
+- [Testing](#testing)
+- [Known Limitations](#known-limitations)
+- [Detailed Architecture](#detailed-architecture)
+- [AI Tools](#ai-tools)
 
-## Project setup
+---
+
+## Architecture
+
+The service follows a **modular layered architecture**:
+
+- **Modules**:
+  - `Auth` – JWT authentication, role-based authorization (admin, analyst)
+  - `Medicine` – CRUD and listing of medicines
+  - `Inventory` – Ingest inventory snapshots & trigger low-stock alerts
+  - `Pricing` – Record price observations & trigger price spike alerts
+  - `Alert` – Manage alerts for low stock and price spikes
+  - `Dashboard` – High-level summary metrics
+  - `Report` – Cost-savings opportunities
+
+- **Persistence**: PostgreSQL with Prisma ORM
+- **Caching**: Redis for dashboard summary and cost-savings report
+- **Observability**: Structured logging using Pino
+
+**Core Entities**: `User`, `Pharmacy`, `Manufacturer`, `Supplier`, `Medicine`, `InventorySnapshot`, `PriceObservation`, `Alert`.
+
+For a visual representation of the architecture:
+[Detailed Architecture Diagram](https://excalidraw.com/#json=F2h5YRkH5Ru5R38yuOGFJ,DUnWnkpAGbPdUR1BPvmV2w)
+
+---
+
+## Prerequisites
+
+### Required
+
+- **Docker & Docker Compose**: everything runs inside containers; no local database or Redis setup needed.
+
+### Good to Have (for local development outside Docker)
+
+- Node.js >= 20 (Node 22 is used inside Docker)
+- pnpm
+- PostgreSQL (if running outside Docker)
+- Redis (if running outside Docker)
+
+---
+
+## Setup & Installation
+
+1. **Clone the repository**
 
 ```bash
-$ pnpm install
+git clone https://github.com/bhpcv252/pharmoris-backend.git
+cd pharmoris-backend
 ```
 
-## Compile and run the project
+2. **Environment Variables**
+
+Copy `.env.example` to `.env` and update values:
+
+---
+
+## Running the Service
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+docker compose up --build
 ```
 
-## Run tests
+- API will be available at: `http://localhost:3000`
+- Swagger docs: `http://localhost:3000/docs`
+
+---
+
+## Database Migrations & Seeding
+
+After the containers are up, run migrations and seed the database:
+
+**Apply existing migrations:**
 
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+docker compose exec api pnpm prisma migrate deploy
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+**Create and apply a new migration:**
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+docker compose exec api pnpm prisma migrate dev --name init
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+**Seed the database with initial data:**
 
-## Resources
+```bash
+docker compose exec api pnpm prisma db seed
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+The seed script adds:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+- Admin user: `admin@pharmoris.com`, Analyst user: `analyst@pharmoris.com`
+- Sample pharmacies, suppliers, manufacturers, medicines
+- Sample inventory snapshots & price observations
 
-## Support
+### Fetching Seeded IDs
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Since there are no dedicated listing endpoints for suppliers, pharmacies, and manufacturers yet, you can query the database directly to get the seeded IDs needed for API requests:
 
-## Stay in touch
+```bash
+docker exec -it pharmoris-db psql -U postgres -d pharmoris -c "
+SELECT 'manufacturer' as type, id, name FROM \"Manufacturer\"
+UNION ALL
+SELECT 'supplier', id, name FROM \"Supplier\"
+UNION ALL
+SELECT 'pharmacy', id, name FROM \"Pharmacy\"
+UNION ALL
+SELECT 'medicine', id, name FROM \"Medicine\";
+"
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+---
 
-## License
+## API Endpoints
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+The API is documented via **Swagger UI** at:
+
+```
+http://localhost:3000/docs
+```
+
+However for a complete collection with example requests and environment setup, **import `PHARMORIS API.postman_collection.json`** into Postman, it's available at the root of the repository and covers all endpoints end-to-end.
+
+### Quick Reference
+
+| Module    | Method | Path                    | Description                                   |
+| --------- | ------ | ----------------------- | --------------------------------------------- |
+| Auth      | POST   | `/auth/login`           | Authenticate user, returns JWT                |
+| Medicines | GET    | `/medicines`            | List medicines (pagination & filters)         |
+| Medicines | POST   | `/medicines`            | Create medicine _(Admin only)_                |
+| Inventory | POST   | `/inventory-snapshots`  | Record snapshot, triggers low-stock alerts    |
+| Pricing   | POST   | `/price-observations`   | Record supplier price, triggers spike alerts  |
+| Alerts    | GET    | `/alerts`               | List alerts (filter by `status`, `severity`)  |
+| Dashboard | GET    | `/dashboard/summary`    | High-level counts, open alerts, total savings |
+| Reports   | GET    | `/reports/cost-savings` | Cost-saving opportunities by medicine         |
+
+---
+
+## Caching
+
+- **Dashboard summary** – Redis cache with 1–2 min TTL, invalidated on new inventory snapshot, price observation, or alert
+- **Cost-saving report** – Redis cache with 5–10 min TTL, invalidated on new price observation or medicine update
+
+---
+
+## Testing
+
+Run unit and integration tests:
+
+```bash
+pnpm test
+pnpm test:e2e
+```
+
+Coverage reports will be generated under `coverage/`.
+
+---
+
+## Known Limitations
+
+- **No historical validation on ingestion**: Inventory and price ingestion APIs do not yet validate against historical inconsistencies or duplicate entries beyond primary keys.
+- **No conflict resolution**: No automated conflict resolution if multiple snapshots or price observations arrive simultaneously for the same medicine.
+- **Basic Redis caching**: Redis is used for caching, but the current setup serialises the full dashboard/cost-savings JSON and invalidates the entire cache. A more granular approach (caching individual metrics and invalidating only affected ones) would improve performance.
+- **Limited test coverage**: Tests are implemented for the inventory and pricing services to verify alert behaviour; broader test coverage across other modules is still needed.
+- **Basic authentication**: JWT-based authentication exists, but additional security layers (rate limiting, audit logging, etc.) are not yet implemented.
+- **Missing listing endpoints**: There are no endpoints to list suppliers, pharmacies, or manufacturers. These IDs are required when sending requests to the current API and must currently be fetched by querying the database directly (see [Fetching Seeded IDs](#fetching-seeded-ids)).
+
+---
+
+## Detailed Architecture
+
+[View Architecture Diagram on Excalidraw](https://excalidraw.com/#json=F2h5YRkH5Ru5R38yuOGFJ,DUnWnkpAGbPdUR1BPvmV2w)
+
+---
+
+## Usage of AI Tools
+
+AI tools were used in parts of the development and documentation process:
+
+- **Seed data generation** – Realistic sample data for pharmacies, suppliers, manufacturers, medicines, inventory snapshots, and price observations was generated with the help of AI assistants.
+- **Documentation** – This README and other supporting docs were drafted and refined with AI assistance.

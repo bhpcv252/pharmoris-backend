@@ -21,7 +21,12 @@ async function main() {
 	logger.info("Seeding started...");
 
 	// Users
-	const password: string = await bcrypt.hash("password123", 10);
+	const rawPassword = process.env.SEED_USERS_PASSWORD;
+	if (!rawPassword) {
+		logger.error("SEED_USERS_PASSWORD env variable is not set");
+		process.exit(1);
+	}
+	const password: string = await bcrypt.hash(rawPassword, 10);
 
 	await prisma.user.upsert({
 		where: { email: "admin@pharmoris.com" },
